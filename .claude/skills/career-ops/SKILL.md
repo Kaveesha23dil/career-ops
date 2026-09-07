@@ -74,6 +74,7 @@ Determine the mode from `$mode`:
 | `scan` | `scan` |
 | `discover` | `discover` |
 | `batch` | `batch` |
+| `job-cv` | `job-cv` |
 | `patterns` | `patterns` |
 | `offer-prep` | `offer-prep` |
 | `titles` | `titles` |
@@ -156,6 +157,7 @@ Available commands:
   /career-ops scan      → Scan portals and discover new offers
   /career-ops discover  → Resolve a company list to scannable ATS boards + append to portals.yml (zero-token)
   /career-ops batch     → Batch processing with parallel workers
+  /career-ops job-cv    → Generate a tailored CV for a saved job detail
   /career-ops patterns  → Analyze rejection patterns and improve targeting
   /career-ops offer-prep → Read a received offer/contract with the candidate: clause walk + lawyer questions (not legal advice)
   /career-ops titles    → Suggest adjacent job titles from your CV to broaden the search
