@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>career-ops — CV Studio</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">co</span>
+    <h1>career-ops <em>CV Studio</em></h1>
+  </div>
+  <div class="meta">
+    <span id="dataRoot" class="pill" title="Resolved data root">…</span>
+    <span id="saveStatus" class="pill pill-note">local-first · nothing leaves this machine</span>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="cv">CV</button>
+  <button class="tab" data-tab="profile">Profile</button>
+  <button class="tab" data-tab="tailor">Tailor CV</button>
+  <button class="tab" data-tab="outputs">Outputs</button>
+</nav>
+
+<main>
+  <!-- ================= CV ================= -->
+  <section id="tab-cv" class="pane active">
+    <div class="pane-head">
+      <h2>Your CV <span class="hint">the canonical cv.md — every tailored CV is built from this file, never invented around it</span></h2>
+      <button id="cvSave" class="btn btn-primary">Save CV</button>
+    </div>
+
+    <div id="cvEmpty" class="empty hidden">
+      <p><strong>No CV yet.</strong> Paste your CV below (plain text, PDF paste, or markdown), or start from a template you fill in.</p>
+      <button id="cvSeed" class="btn">Insert starter template</button>
+    </div>
+
+    <textarea id="cvText" class="mono" spellcheck="false" placeholder="# CV -- Your Name&#10;&#10;**Location:** ...&#10;**Email:** ...&#10;**LinkedIn:** ...&#10;&#10;## Professional Summary&#10;&#10;## Work Experience&#10;&#10;## Projects&#10;&#10;## Education&#10;&#10;## Skills"></textarea>
+
+    <div id="cvStatus" class="status"></div>
+    <p class="hint">Tip: automated tailoring <em>reorders and highlights</em> what already exists in your CV — it never adds a skill, number, or claim you didn't write. Backups: <code>cv.md.bak</code>.</p>
+  </section>
+
+  <!-- ================= Profile ================= -->
+  <section id="tab-profile" class="pane">
+    <div class="pane-head">
+      <h2>Profile <span class="hint">config/profile.yml — your contact details feed the header of every generated CV</span></h2>
+      <button id="profileSave" class="btn btn-primary">Save profile</button>
+    </div>
+
+    <div id="profileEmpty" class="empty hidden">
+      <p><strong>No profile.yml yet.</strong> Fill the form below (it creates one), or paste the example in the YAML tab first.
+        Example: <code>config/profile.example.yml</code></p>
+    </div>
+
+    <div class="grid">
+      <label>Full name<input id="pf-full_name" placeholder="Jane Smith"></label>
+      <label>Email<input id="pf-email" type="email" placeholder="jane@example.com"></label>
+      <label>Phone<input id="pf-phone" placeholder="+1-555-0123"></label>
+      <label>Location<input id="pf-location" placeholder="San Francisco, CA"></label>
+      <label>LinkedIn<input id="pf-linkedin" placeholder="linkedin.com/in/janesmith"></label>
+      <label>GitHub<input id="pf-github" placeholder="github.com/janesmith"></label>
+      <label>Portfolio URL<input id="pf-portfolio_url" placeholder="https://janesmith.dev"></label>
+      <label>Photo (local path or data: URL; blank omits)<input id="pf-photo" placeholder=""></label>
+    </div>
+
+    <div class="form-section">
+      <h3>Target roles <span class="hint">one per line — drives the primary archetype</span></h3>
+      <textarea id="pf-roles" class="mono short" spellcheck="false" placeholder="Senior AI Engineer&#10;Staff ML Engineer"></textarea>
+    </div>
+
+    <details id="yamlToggle">
+      <summary>Edit raw YAML</summary>
+      <textarea id="profileYaml" class="mono" spellcheck="false"></textarea>
+      <p class="hint">Saving raw YAML replaces the whole file. The form above updates fields in place and keeps your comments &amp; custom keys.</p>
+    </details>
+
+    <div id="profileStatus" class="status"></div>
+  </section>
+
+  <!-- ================= Tailor CV ================= -->
+  <section id="tab-tailor" class="pane">
+    <div class="pane-head">
+      <h2>Tailor CV <span class="hint">paste a job → the system builds a CV aimed at that JD</span></h2>
+    </div>
+
+    <div class="tailor-layout">
+
+      <div class="jobs-col">
+        <details class="new-job" open>
+          <summary>+ Add a job</summary>
+          <div class="new-job-form">
+            <label>Company<input id="job-company" placeholder="e.g. Acme"></label>
+            <label>Role<input id="job-role" placeholder="e.g. Senior ML Engineer"></label>
+            <label>URL (optional)<input id="job-url" placeholder="https://…"></label>
+            <label>Job description
+              <textarea id="job-text" class="mono short" spellcheck="false" placeholder="Paste the full JD text here — the longer and more complete, the better the targeting."></textarea>
+            </label>
+            <button id="jobAdd" class="btn btn-primary">Add to library</button>
+            <div id="jobAddStatus" class="status"></div>
+          </div>
+        </details>
+
+        <h3>Jobs</h3>
+        <ul id="jobList" class="job-list"></ul>
+      </div>
+
+      <div class="detail-col">
+        <div id="jobDetailEmpty" class="empty">
+          <p>Pick a job on the left, then hit <strong>Tailor CV</strong>.</p>
+        </div>
+
+        <div id="jobDetail" class="hidden">
+          <div class="job-head">
+            <div>
+              <h3 id="jobDetailCompany"></h3>
+              <p class="job-role-line" id="jobDetailRole"></p>
+              <p class="job-url-line"><a id="jobDetailUrl" target="_blank" rel="noopener"></a></p>
+              <p id="jobDetailMeta" class="hint"></p>
+            </div>
+            <button id="jobTailor" class="btn btn-primary">Tailor CV</button>
+          </div>
+
+          <div id="jobGenStatus" class="status"></div>
+
+          <div id="jobReport" class="hidden">
+            <div class="report-grid">
+              <div class="card">
+                <h4>Matched JD keywords</h4>
+                <div id="jobMatched" class="chips"></div>
+              </div>
+              <div class="card">
+                <h4>Gaps (in JD, not in your CV)</h4>
+                <div id="jobGaps" class="chips chips-gap"></div>
+                <p class="hint">Never auto-injected — consider editing your CV if these matter.</p>
+              </div>
+              <div class="card card-wide">
+                <h4>What this run did</h4>
+                <ul id="jobStats" class="stats"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="jobWarnings" class="warnings hidden"></div>
+
+          <div id="jobPdfWrap" class="hidden">
+            <div class="pdf-actions">
+              <a id="jobPdfLink" class="btn" download>Download PDF</a>
+            </div>
+            <iframe id="jobPdfFrame" class="pdf-frame" title="Tailored CV"></iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= Outputs ================= -->
+  <section id="tab-outputs" class="pane">
+    <div class="pane-head">
+      <h2>Generated CVs <span class="hint">output/*.pdf — from this GUI or any career-ops pdf run</span></h2>
+    </div>
+    <div id="outputsList"></div>
+  </section>
+</main>
+
+<footer class="foot">career-ops GUI · data root is resolved like every other career-ops script (CAREER_OPS_ROOT / .career-ops-data / repo root) · binds to 127.0.0.1 only</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>
