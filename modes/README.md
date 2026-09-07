@@ -42,6 +42,7 @@ table in `AGENTS.md` (mirrored in `CLAUDE.md`).
 | `training.md` | `training` | Training & course evaluation |
 | `project.md` | `project` | Portfolio project evaluation |
 | `add.md` | `add` | Add a project, paper, or role to the CV (confirm-before-write) |
+| `job-cv.md` | `job-cv` | Save job details, generate a tailored CV for a saved job |
 | `agent-inbox.md` | `agent-inbox` | Queue requests for the next session |
 | `update.md` | `update` | Interactive system update |
 

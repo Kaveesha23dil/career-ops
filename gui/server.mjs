@@ -43,6 +43,7 @@ const JOBS_FILE = join(DATA_ROOT, 'data', 'gui', 'jobs.json');
 
 const MAX_CV_BYTES = 200 * 1024;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
+const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const PORT = portFromArgs(process.argv.slice(2), process.env.GUI_PORT || 8787);
 
 let yamlLib = null;
@@ -144,6 +145,64 @@ function readJsonBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+/** Collect a request body as raw bytes (binary-safe) with a size cap. */
+function readRawBody(req, maxBytes = MAX_PDF_BYTES) {
+  return new Promise((resolveBody, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(new Error('file too large (max 20 MB)'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolveBody(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+/**
+ * Minimal multipart/form-data parser for a single PDF upload. Returns a map of
+ * field name → { filename?, data: Buffer }. Only fields with a `name="..."`
+ * are captured; file bodies are kept as raw bytes.
+ */
+function parseMultipart(body, contentType) {
+  const m = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(contentType || '');
+  if (!m) return null;
+  const boundary = Buffer.from('--' + (m[1] || m[2]).trim());
+  const result = {};
+  let pos = 0;
+  while (pos < body.length) {
+    const start = body.indexOf(boundary, pos);
+    if (start === -1) break;
+    const headAt = start + boundary.length;
+    // A closing "--" marks the end of the multipart body.
+    if (headAt + 1 < body.length && body[headAt] === 0x2d && body[headAt + 1] === 0x2d) break;
+    let idx = headAt;
+    if (body[idx] === 0x0d && body[idx + 1] === 0x0a) idx += 2;
+    const headerEnd = body.indexOf('\r\n\r\n', idx);
+    if (headerEnd === -1) break;
+    const headerBlock = body.slice(idx, headerEnd).toString('utf8');
+    const bodyStart = headerEnd + 4;
+    const next = body.indexOf(boundary, bodyStart);
+    if (next === -1) break;
+    let bodyEnd = next;
+    if (bodyEnd >= 2 && body[bodyEnd - 2] === 0x0d && body[bodyEnd - 1] === 0x0a) bodyEnd -= 2;
+    const name = /name="([^"]*)"/i.exec(headerBlock)?.[1];
+    if (name) {
+      const filename = /filename="([^"]*)"/i.exec(headerBlock)?.[1];
+      result[name] = filename
+        ? { filename, data: body.slice(bodyStart, bodyEnd) }
+        : { data: body.slice(bodyStart, bodyEnd) };
+    }
+    pos = next;
+  }
+  return result;
 }
 
 function sendJson(res, status, obj) {
@@ -346,6 +405,50 @@ async function handleApi(method, pathname, req, res) {
       atomicWrite(cvPath, body.content);
       return sendJson(res, 200, { ok: true, path: cvPath, bytes: Buffer.byteLength(body.content, 'utf8') });
     }
+  }
+
+  // /api/cv/parse-pdf — extract text from an uploaded CV PDF (server-side,
+  // local, done by pdf-parse; the text lands in the editor for review before
+  // the user saves it as cv.md). Nothing is written by this endpoint.
+  if (parts[0] === 'cv' && parts[1] === 'parse-pdf' && parts.length === 2 && method === 'POST') {
+    const ctype = req.headers['content-type'] || '';
+    if (!ctype.toLowerCase().includes('multipart/form-data')) {
+      return sendJson(res, 400, { error: 'Expected a multipart/form-data upload with a PDF file.' });
+    }
+    let body;
+    try {
+      body = await readRawBody(req);
+    } catch (e) {
+      return sendJson(res, 413, { error: e instanceof Error ? e.message : 'file too large' });
+    }
+    const form = parseMultipart(body, ctype);
+    const file = form && form.file;
+    if (!file) return sendJson(res, 400, { error: 'No PDF file received (expecting a "file" field).' });
+    if (!/\.pdf$/i.test(file.filename || '')) return sendJson(res, 400, { error: 'Only PDF files are supported — choose a .pdf CV.' });
+    if (file.data.length === 0) return sendJson(res, 400, { error: 'The uploaded PDF is empty.' });
+
+    let PDFParse;
+    try {
+      ({ PDFParse } = await import('pdf-parse'));
+    } catch {
+      return sendJson(res, 500, { error: 'pdf-parse is not installed — run `npm install` in the career-ops root.' });
+    }
+
+    let result;
+    try {
+      const parser = new PDFParse({ data: new Uint8Array(file.data) });
+      result = await parser.getText();
+      await parser.destroy();
+    } catch (e) {
+      return sendJson(res, 400, { error: `Could not read the PDF: ${e instanceof Error ? e.message.split('\n')[0] : e}` });
+    }
+    const text = (result.text || '').trim();
+    if (!text) {
+      return sendJson(res, 422, {
+        error: 'No text found in this PDF — it may be a scanned image. Re-export it with a text layer, or paste the CV text instead.',
+      });
+    }
+    return sendJson(res, 200, { ok: true, text, filename: file.filename, chars: text.length });
   }
 
   // /api/profile

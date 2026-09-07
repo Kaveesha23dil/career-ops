@@ -52,6 +52,7 @@ main { padding: 18px 20px 40px; max-width: 1180px; margin: 0 auto; }
 
 .pane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
 .pane-head h2 { margin: 0; font-size: 17px; }
+.head-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .hint { color: var(--muted); font-size: 12px; font-weight: 400; }
 .hint code, code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-family: var(--mono); font-size: 12px; }
 
@@ -62,6 +63,7 @@ textarea {
 }
 textarea:focus { border-color: var(--accent-dim); }
 textarea.short { min-height: 130px; }
+textarea.drag-over { border-color: var(--accent); border-style: dashed; background: var(--panel); }
 
 .btn {
   background: var(--panel-2); color: var(--text); border: 1px solid var(--line);

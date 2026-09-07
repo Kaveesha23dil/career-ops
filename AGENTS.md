@@ -117,6 +117,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel |
 | `generate-pdf.mjs` | Playwright: HTML to PDF |
 | `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
+| `job-cv.mjs` | Job-detail storage + lookup for the `job-cv` mode — saves `data/jobs/{slug}.json` (company + role + JD, slug-deduped), lists saved jobs, prints one job's details (`save` / `list` / `show`; `CAREER_OPS_JOBS_DIR` overrides the jobs dir) |
 | `scan.mjs` | Zero-token portal scanner (Greenhouse/Ashby/Lever APIs, zero LLM cost) |
 | `scan-ats-full.mjs` | Reverse-ATS keyword-first scanner over full public ATS datasets (Greenhouse/Lever/Ashby/Workday/iCIMS), filtered by portals.yml `title_filter`/`location_filter` — no company list needed; checkpoints every 500 companies, `--resume` continues an interrupted sweep |
 | `scan-interamt.mjs` | Playwright browser scanner for Interamt.de (German public sector portal — Apache Wicket, no REST API) |
@@ -340,6 +341,7 @@ Two separate axes:
 | Processes pending URLs | `pipeline` |
 | Wants a fast first-pass filter before full evaluation | `triage` |
 | Batch processes offers | `batch` |
+| Wants to save a job's details and generate a CV tailored to that specific job | `job-cv` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Wants to know whether the evaluation scores are predicting their real outcomes (interviews/offers) | `calibrate` — advisory report over `/outcome` data; never changes scoring |
 | Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research; optional draft-only negotiation reply from the "Items to raise" list |

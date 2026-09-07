@@ -30,11 +30,16 @@
   <section id="tab-cv" class="pane active">
     <div class="pane-head">
       <h2>Your CV <span class="hint">the canonical cv.md — every tailored CV is built from this file, never invented around it</span></h2>
-      <button id="cvSave" class="btn btn-primary">Save CV</button>
+      <div class="head-actions">
+        <button id="cvUpload" class="btn">Upload PDF</button>
+        <button id="cvSave" class="btn btn-primary">Save CV</button>
+      </div>
     </div>
 
+    <input id="cvFile" type="file" accept=".pdf,application/pdf" hidden>
+
     <div id="cvEmpty" class="empty hidden">
-      <p><strong>No CV yet.</strong> Paste your CV below (plain text, PDF paste, or markdown), or start from a template you fill in.</p>
+      <p><strong>No CV yet.</strong> Upload your CV as a PDF, paste the text below, or start from a template you fill in.</p>
       <button id="cvSeed" class="btn">Insert starter template</button>
     </div>
 
