@@ -135,6 +135,60 @@ function bindCv() {
     $('#cvEmpty').classList.add('hidden');
     setStatus('#cvStatus', 'Template inserted — fill it in, then Save CV.', 'ok');
   });
+
+  // — PDF upload: extract the full text of a PDF CV into the editor. The text
+  //   is produced locally (pdf-parse on the GUI's own server) and is only a
+  //   draft — nothing is saved until the user reviews and presses Save CV.
+  $('#cvUpload').addEventListener('click', () => $('#cvFile').click());
+
+  $('#cvFile').addEventListener('change', () => {
+    const file = $('#cvFile').files && $('#cvFile').files[0];
+    $('#cvFile').value = '';
+    if (file) uploadCvPdf(file);
+  });
+
+  // Drag & drop a PDF straight onto the editor.
+  const ta = $('#cvText');
+  ['dragover', 'dragenter'].forEach((ev) => ta.addEventListener(ev, (e) => {
+    if (e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files')) {
+      e.preventDefault();
+      ta.classList.add('drag-over');
+    }
+  }));
+  ['dragleave', 'drop'].forEach((ev) => ta.addEventListener(ev, (e) => {
+    if (ev === 'dragleave' && ta.contains(e.relatedTarget)) return;
+    e.preventDefault();
+    ta.classList.remove('drag-over');
+  }));
+  ta.addEventListener('drop', (e) => {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) uploadCvPdf(f);
+  });
+}
+
+async function uploadCvPdf(file) {
+  if (!/\.pdf$/i.test(file.name)) {
+    setStatus('#cvStatus', 'Please choose a PDF file.', 'err');
+    return;
+  }
+  const btn = $('#cvUpload');
+  btn.disabled = true;
+  btn.textContent = 'Reading PDF…';
+  try {
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    const res = await fetch('/api/cv/parse-pdf', { method: 'POST', body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Parse failed (${res.status})`);
+    $('#cvText').value = data.text;
+    $('#cvEmpty').classList.add('hidden');
+    setStatus('#cvStatus', `Extracted ${data.chars} characters from ${file.name}. Review below, then press Save CV to write cv.md.`, 'ok');
+  } catch (e) {
+    setStatus('#cvStatus', e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload PDF';
+  }
 }
 
 function sepGuess() { return navigator.userAgent.includes('Windows') ? '\\' : '/'; }
