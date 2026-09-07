@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.31.0](https://github.com/Kaveesha23dil/career-ops/compare/career-ops-v1.30.0...career-ops-v1.31.0) (2026-09-07)
+
+
+### Features
+
+* add deterministic CV tailoring tool for career-ops GUI ([beded19](https://github.com/Kaveesha23dil/career-ops/commit/beded19ef41b461247d73286b8dc0a7e66b8da2e))
+* add deterministic CV tailoring tool for career-ops GUI ([ad80d72](https://github.com/Kaveesha23dil/career-ops/commit/ad80d72b7bc35511b83f80a03d3a5abe5c92a9eb))
+* add job-cv mode for tailored CV generation and related functionalities ([59ca25d](https://github.com/Kaveesha23dil/career-ops/commit/59ca25d841c2e535e2a5ecb4546cd20b1d5c9d82))
+* implement PDF upload and parsing for CV editor ([c04f820](https://github.com/Kaveesha23dil/career-ops/commit/c04f82021748e935613c768b17c8a50f4babd927))
+
 ## [1.32.0](https://github.com/career-ops-hq/career-ops/compare/career-ops-v1.31.0...career-ops-v1.32.0) (2026-09-03)
 
 
